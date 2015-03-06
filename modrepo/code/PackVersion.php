@@ -141,6 +141,7 @@ class PackVersion extends DataObject {
 				}
 
 				if($name == 'null') $name = ucfirst($internal);
+				if(trim($name) == 'Name could not be retrieved due to an error: java.lang.NullPointerException') $name = ucfirst($internal);
 
 				$item = DataObject::get_one('Item', 'InternalName=\'' . Convert::raw2sql(trim($internal)) . '\' AND ModID=' . intval($mod->ID));
 				
