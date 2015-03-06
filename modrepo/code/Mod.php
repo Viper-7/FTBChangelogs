@@ -191,7 +191,7 @@ class PackVersion extends DataObject {
                         $this->MinetweakerID = null;
                         $file->delete();
                         $this->doMinetweaker($content);
-                }
+                
 
 		$prev = $this->PreviousVersion();
 
@@ -218,6 +218,7 @@ class PackVersion extends DataObject {
 				$mod->write();
 				}
 			}
+		}
 		}
 		}
                        $changes = $this->getChanges();
