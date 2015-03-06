@@ -66,6 +66,10 @@ class Pack extends DataObject {
 	public static $has_many = array(
 		'PackVersion' => 'PackVersion',
 	);
+
+	public function canDelete($member = NULL) {
+		return $this->PackVersion()->Count() == 0; 
+	}
 	
 	public function getCMSFields() {
 		$fields = parent::getCMSFields();
@@ -441,6 +445,10 @@ class Mod extends DataObject {
 	
 	public function getName() {
 		return $this->ModId;
+	}
+	
+	public function canDelete($member = NULL) {
+		return $this->ModVersion()->Count() == 0;
 	}
 }
 
