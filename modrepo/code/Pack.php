@@ -55,7 +55,7 @@ class Pack extends DataObject {
 				}
 				
 				if($this->MinecraftVersion)
-					$ver = preg_replace('/(?:MC)?[-_\.\s]' . preg_quote($this->MinecraftVersion, '/') . '(?:[-_\.\s]|$)/i', '', $ver);
+					$ver = preg_replace('/(?:MC|[-_\.\s]|^)' . preg_quote($this->MinecraftVersion, '/') . '(?:[-_\.\s]|$)/i', '', $ver);
 				
 				$name = str_replace(array(' for Minecraft', ' (base)'), '', $name);
 
