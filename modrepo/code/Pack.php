@@ -52,6 +52,8 @@ class Pack extends DataObject {
 						$ver = $file_ver;
 					}
 				}
+				
+				$name = str_replace(array(' for Minecraft', ' (base)'), '', $name);
 
 				$mod = DataObject::get_one('Mod', 'ModId=\'' . Convert::raw2sql(trim($modid)) . '\'');
 				if(!$mod) {
