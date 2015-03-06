@@ -158,8 +158,9 @@ class PackVersion extends DataObject {
 
 				if(!isset($modversions[$mod->ID])) {
 					$version = $this->ModVersion('ModID=' . $mod->ID);
-									if($version->Count()) {
-											$version = $version->First();
+					
+					if($version->Count()) {
+						$version = $version->First();
 						$modversions[$mod->ID] = $version;
 					}
 				}
