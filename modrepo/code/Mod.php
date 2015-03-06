@@ -113,6 +113,7 @@ class PackVersion extends DataObject {
 		'Version' => 'Varchar(255)',
 		'Changelog' => 'Text',
 		'ModList' => 'Text',
+		'Populated' => 'Boolean',
 	);
 	
 	public static $has_one = array(
@@ -131,6 +132,8 @@ class PackVersion extends DataObject {
 	public function getTitle() {
 		return $this->Version;
 	}
+
+	public static $has_written = false;
 
 	public function PreviousVersion() {
 		return DataObject::get_one('PackVersion', 'Version < \'' . Convert::raw2sql($this->Version) . '\'', true, 'Version DESC');
@@ -172,10 +175,17 @@ class PackVersion extends DataObject {
 		return self::get_changes($this->PreviousVersion(), $this);
 	}
 
+	public function onAfterWrite() {
+		if(self::$has_written) Controller::curr()->redirectBack();
+		self::$has_written = true;
+	}
+
 	public function onBeforeWrite() {
 		parent::onBeforeWrite();
 
-		if(isset($_POST['BatchChangelog']) && is_array($val = $_POST['BatchChangelog'])) {
+		if(self::$has_written) return;
+
+		if($this->Populated && isset($_POST['BatchChangelog']) && is_array($val = $_POST['BatchChangelog'])) {
 			foreach($val as $modid => $changelog) {
 				$mv = DataObject::get_by_id('ModVersion', $modid);
 				$mv->Changelog = $changelog;
@@ -191,37 +201,44 @@ class PackVersion extends DataObject {
                         $this->MinetweakerID = null;
                         $file->delete();
                         $this->doMinetweaker($content);
-                
+               } 
 
 		$prev = $this->PreviousVersion();
 
-		if($prev) {
-		foreach($this->ModVersion() as $mod) {
-			if(trim($mod->Changelog) == '') {
-				$old = $prev->ModVersion('ModID=' . intval($mod->ModID));
-				if($old->Count()) {
-					$old = $old->First();
-					if($old->ID == $mod->ID) continue;
+		if(!$this->Populated) {
+			if($prev) {
+				foreach($this->ModVersion() as $mod) {
+					if(trim($mod->Changelog) == '') {
+						$old = $prev->ModVersion('ModID=' . intval($mod->ModID));
+						if($old->Count()) {
+							$old = $old->First();
+							if($old->ID == $mod->ID) continue;
 
-				$changes = ModVersion::get_changes($old, $mod);
-				$changelog = '';
+							$changes = ModVersion::get_changes($old, $mod);
+							$changelog = '';
 
-				foreach($changes['Added'] as $item) {
-					$changelog .= "\r\nAdded {$item->Name}";
-				}
+							foreach($changes['Added'] as $item) {
+								$changelog .= "\r\nAdded {$item->Name}";
+							}
 
-				foreach($changes['Removed'] as $item) {
-					$changelog .= "\r\nRemoved {$item->Name}";
-				}
+							foreach($changes['Removed'] as $item) {
+								$changelog .= "\r\nRemoved {$item->Name}";
+							}
+				
+							if($changelog) {
+								$mod->Changelog = trim($changelog);
+								$mod->write();
 
-				$mod->Changelog = trim($changelog);
-				$mod->write();
+								$this->Populated = true;
+							}
+						}
+					}
 				}
 			}
 		}
-		}
-		}
-                       $changes = $this->getChanges();
+
+
+                       $changes = PackVersion::getChanges($prev, $this);
                        $changelog = '';
 
 			foreach($changes['Added'] as $mod) {
@@ -235,7 +252,6 @@ class PackVersion extends DataObject {
                                         foreach(explode("\n", $mod->Changelog) as $line) {
                                                 $changelog .= "\r\n    " . trim($line);
                                         }
-					$changelog .= "\r\n";
                                 }
                         }
 
@@ -244,13 +260,6 @@ class PackVersion extends DataObject {
 			}
 
                         $this->Changelog = trim($changelog);
-
-		$modlist = '';
-		foreach($this->ModVersion() as $mod) {
-			$modlist .= "{$mod->Name} {$mod->Version}\r\n";
-		}
-		$this->ModList = trim($modlist);
-
 
 		
 	}
@@ -292,7 +301,7 @@ class PackVersion extends DataObject {
 					}
 				}
 
-				if(isset($modversions[$mod->ID]))
+				if(isset($modversions[$mod->ID])) 
 					$modversions[$mod->ID]->Item()->add($item);
                         }
                 }
