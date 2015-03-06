@@ -87,10 +87,10 @@ class PackVersion extends DataObject {
 							$changelog .= "Removed {$item->Name}\r\n";
 						}
 				
-						if($changelog) {
-							$mod->Changelog = trim($changelog);
-							$mod->write();
+						$mod->Changelog = trim($changelog);
+						$mod->write();
 
+						if($changelog) {
 							$this->Populated = true;
 						}
 					}
