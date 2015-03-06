@@ -486,6 +486,20 @@ class ModVersion extends DataObject {
 		return $this->Mod()->HideInChangelogs;
 	}
 
+
+	public function getCMSFields() {
+		$fields = parent::getCMSFields();
+		$fields->removeByName('ModID');
+
+		$config = GridFieldConfig_RecordEditor::create();
+		$config->removeComponentsByType('GridFieldAddNewButton');
+		$config->removeComponentsByType('GridFieldDeleteAction');
+
+		$fields->fieldByName('Root.PackVersion.PackVersion')->setConfig($config);
+		$fields->fieldByName('Root.Item.Item')->setConfig($config);
+		return $fields;
+	}
+
         public static function get_changes($oldVersion, $newVersion) {
                 if(!$oldVersion && $newVersion) return array('Updated' => array(), 'Added' => $newVersion->Item(), 'Removed' => array());
                 if(!$newVersion->ID || !$oldVersion->ID) return array('Updated' => array(), 'Added' => array(), 'Removed' => array());
