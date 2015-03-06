@@ -2,6 +2,7 @@
 class Pack extends DataObject {
 	public static $db = array(
 		'Name' => 'Varchar(255)',
+		'MinecraftVersion' => 'Varchar(255)',
 	);
 	
 	public static $has_one = array(
@@ -52,6 +53,9 @@ class Pack extends DataObject {
 						$ver = $file_ver;
 					}
 				}
+				
+				if($this->MinecraftVersion)
+					$ver = preg_replace('/(?:MC)?[-_\.\s]' . preg_quote($this->MinecraftVersion, '/') . '(?:[-_\.\s]|$)/i', '', $ver);
 				
 				$name = str_replace(array(' for Minecraft', ' (base)'), '', $name);
 
