@@ -28,12 +28,12 @@ class PackPage_Controller extends Page_Controller {
 
 	public function getPackVersions() {
 		if($this->PackID) {
-			return DataObject::get_by_id('Pack', $this->PackID)->PackVersion('EditedChangelog IS NOT NULL');
+			return DataObject::get_one('Pack', 'Name = \'' . Convert::raw2sql($this->PackID) . '\'')->PackVersion('EditedChangelog IS NOT NULL');
 		}
 	}
 
 	public function getPackVersion() {
 		if($this->PackVersionID)
-			return DataObject::get_by_id('PackVersion', $this->PackVersionID);
+			return DataObject::get_one('PackVersion', 'Version = \'' . Convert::raw2sql($this->PackVersionID) . '\'');
 	}
 }

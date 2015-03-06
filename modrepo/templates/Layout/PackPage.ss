@@ -6,13 +6,13 @@
 <% else_if PackVersions %>
 	<ul>
 	<% loop PackVersions %>
-		<li><a href="$Top.Link$Pack.ID/$ID">$Version</a></li>
+		<li><a href="$Top.Link$Pack.Name.URLATT/$Version.URLATT">$Version</a></li>
 	<% end_loop %>
 	</ul>
 <% else %>
 	<ul>
 		<% loop Packs %>
-			<li><a href="$Top.Link$ID">$Name</a></li>
+			<li><a href="$Top.Link$Name.URLATT">$Name</a></li>
 		<% end_loop %>
 	</ul>
 <% end_if %>
