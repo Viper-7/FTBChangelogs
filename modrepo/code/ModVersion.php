@@ -59,14 +59,16 @@ class ModVersion extends DataObject {
 		if(!$oldVersion && $newVersion) return array('Updated' => array(), 'Added' => $newVersion->Item(), 'Removed' => array());
 		if(!$newVersion->ID || !$oldVersion->ID) return array('Updated' => array(), 'Added' => array(), 'Removed' => array());
 
+		$packid = $oldVersion->PackVersion()->First()->PackID;
+		
 		$olditems = array();
 		$newitems = array();
 
-		foreach($oldVersion->Item('Item.PackID = ' . $oldVersion->PackVersion()->PackID) as $item) {
+		foreach($oldVersion->Item('Item.PackID = ' . intval($packid)) as $item) {
 			$olditems[] = $item->ID;
 		}
 
-		foreach($newVersion->Item('Item.PackID = ' . $newVersion->PackVersion()->PackID) as $item) {
+		foreach($newVersion->Item('Item.PackID = ' . intval($packid)) as $item) {
 			$newitems[] = $item->ID;
 		}
 
