@@ -30,7 +30,7 @@ class PackVersion extends DataObject {
 	public static $has_written = false;
 
 	public function PreviousVersion() {
-		return DataObject::get_one('PackVersion', 'Version < \'' . Convert::raw2sql($this->Version) . '\'', true, 'Version DESC');
+		return DataObject::get_one('PackVersion', 'PackID = ' . intval($this->PackID) . ' AND Version < \'' . Convert::raw2sql($this->Version) . '\'', true, 'Version DESC');
 	}
 	
 	public function getChanges() {
@@ -140,8 +140,8 @@ class PackVersion extends DataObject {
 					$mod->write();
 				}
 
-				if($name == 'null') $name = ucfirst($internal);
-				if(trim($name) == 'Name could not be retrieved due to an error: java.lang.NullPointerException') $name = ucfirst($internal);
+				if($name == 'null' || trim($name) == 'Name could not be retrieved due to an error: java.lang.NullPointerException')
+					$name = ucwords(preg_replace('/^<(.+)>$|^(.+)\|.+?$/m', '$1', str_replace(array('.', '<', '>'), ' ', str_replace('tile.','',$internal))));
 
 				$item = DataObject::get_one('Item', 'InternalName=\'' . Convert::raw2sql(trim($internal)) . '\' AND ModID=' . intval($mod->ID));
 				
@@ -164,10 +164,9 @@ class PackVersion extends DataObject {
 						$version = $version->First();
 						$modversions[$mod->ID] = $version;
 					}
-				}
-
-				if(isset($modversions[$mod->ID])) 
+				} else {
 					$modversions[$mod->ID]->Item()->add($item);
+				}
 			}
 		}
 	}

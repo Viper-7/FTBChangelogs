@@ -11,10 +11,15 @@ class Mod extends DataObject {
 
 	public static $summary_fields = array(
 		'ModId' => 'ModId',
+		'HideInChangelogs.Nice' => 'Hide in Changelogs'
 	);
 
 	public static $indexes = array(
 		'ModId' => true
+	);
+
+	public static $searchable_fields = array(
+		'ModId'
 	);
 	
 	public function getName() {
