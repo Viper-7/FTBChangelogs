@@ -74,6 +74,7 @@ class Pack extends DataObject {
 		if($version) {
 			$config = $version->getConfig();
 			$config->removeComponentsByType('GridFieldAddNewButton');
+			$config->removeComponentsByType('GridFieldAddExistingAutocompleter');
 
 			$fields->fieldByName('Root.Main.AddVersion')->setTitle('Create new version<br>from Mod List.txt');
 		} else {
@@ -189,14 +190,19 @@ class PackVersion extends DataObject {
 		$newmods = array();
 		$versions = array();
 		$versionchange = array();
+		$mods = array();
 
 		foreach($oldVersion->ModVersion() as $mod) {
-			$oldmods[] = $mod->ModID;
+			if(!isset($mods[$mod->ModID])) $mods[$mod->ModID] = $mod->Mod();
+			if(!$mods[$mod->ModID]->HideInChangelogs) $oldmods[] = $mod->ModID;
+
 			$versions[$mod->ModID] = $mod->Version;
 		}
 
 		foreach($newVersion->ModVersion() as $mod) {
-			$newmods[] = $mod->ModID;
+			if(!isset($mods[$mod->ModID])) $mods[$mod->ModID] = $mod->Mod();
+			if(!$mods[$mod->ModID]->HideInChangelogs) $newmods[] = $mod->ModID;
+
 			if(isset($versions[$mod->ModID]) && $versions[$mod->ModID] != $mod->Version) {
 				$versionchange[] = $mod->ModID;
 				self::$old_versions[$mod->ModID] = $versions[$mod->ModID];
@@ -375,7 +381,7 @@ class PackVersion extends DataObject {
 			$minetweaker->setTitle('minetweaker.log');
 
 			$minetweaker->getValidator()->setAllowedExtensions(array('log'));
-			$fields->addFieldToTab('Root.Items', $minetweaker);
+			$fields->addFieldToTab('Root.Minetweaker', $minetweaker);
 
 			$fields->fieldByName('Root.Main')->setTitle('Pack Version');
 			$fields->fieldByName('Root.ModVersion')->setTitle('Mods');
@@ -418,6 +424,7 @@ class Item extends DataObject {
 class Mod extends DataObject {
 	public static $db = array(
 		'ModId' => 'Varchar(255)',
+		'HideInChangelogs' => 'Boolean',
 	);
 	
 	public static $has_many = array(
@@ -473,6 +480,10 @@ class ModVersion extends DataObject {
 
 	public function canDelete($member = NULL) {
 		return false;
+	}
+
+	public function getHideInChangelogs() {
+		return $this->Mod()->HideInChangelogs;
 	}
 
         public static function get_changes($oldVersion, $newVersion) {
