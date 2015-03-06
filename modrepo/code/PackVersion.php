@@ -19,8 +19,8 @@ class PackVersion extends DataObject {
 	);
 	
 	public static $summary_fields = array(
+		'Version' => 'Version',
 		'Pack.Name' => 'Name',
-		'Version' => 'Version'
 	);
 
 	public function getTitle() {
