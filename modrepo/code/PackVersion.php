@@ -143,7 +143,7 @@ class PackVersion extends DataObject {
 				if($name == '' || $name == 'null' || trim($name) == 'Name could not be retrieved due to an error: java.lang.NullPointerException')
 					$name = $internal;
 				
-				$name = ucwords(preg_replace('/^<(.+)>$|^(.+)\|.+?$/m', '$1', str_replace(array('.', '<', '>'), ' ', str_replace(array('tile.block', 'tile.', '.name'), '', $internal))));
+				$name = ucwords(preg_replace('/^<(.+)>$|^(.+)\|.+?$/m', '$1', str_replace(array('.', '<', '>'), ' ', str_replace(array('tile.block', 'tile.', '.name'), '', $name))));
 
 				$item = DataObject::get_one('Item', 'InternalName=\'' . Convert::raw2sql(trim($internal)) . '\' AND ModID=' . intval($mod->ID) . ' AND PackID=' . intval($this->PackID));
 				
