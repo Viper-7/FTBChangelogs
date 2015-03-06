@@ -143,10 +143,10 @@ class PackVersion extends DataObject {
 				if($name == 'null' || trim($name) == 'Name could not be retrieved due to an error: java.lang.NullPointerException')
 					$name = ucwords(preg_replace('/^<(.+)>$|^(.+)\|.+?$/m', '$1', str_replace(array('.', '<', '>'), ' ', str_replace('tile.','',$internal))));
 
-				$item = DataObject::get_one('Item', 'InternalName=\'' . Convert::raw2sql(trim($internal)) . '\' AND ModID=' . intval($mod->ID));
+				$item = DataObject::get_one('Item', 'InternalName=\'' . Convert::raw2sql(trim($internal)) . '\' AND ModID=' . intval($mod->ID) . ' AND PackID=' . intval($this->PackID));
 				
 				if(!$item) {
-					$item = DataObject::get_one('Item', 'Name=\'' . Convert::raw2sql(trim($name)). '\' AND ModID=' . intval($mod->ID));
+					$item = DataObject::get_one('Item', 'Name=\'' . Convert::raw2sql(trim($name)). '\' AND ModID=' . intval($mod->ID) . ' AND PackID=' . intval($this->PackID));
 				}
 
 				if(!$item) {
@@ -154,6 +154,7 @@ class PackVersion extends DataObject {
 					$item->Name = $name;
 					$item->InternalName = $internal;
 					$item->ModID = $mod->ID;
+					$item->PackID = $this->PackID;
 					$item->write();
 				}
 

@@ -6,13 +6,13 @@ class Item extends DataObject {
 	);
 
 	public static $has_one = array(
-		'Mod' => 'Mod'
+		'Mod' => 'Mod',
+		'Pack' => 'Pack',
 	);
 
 	public static $belongs_many_many = array(
 		'ModVersion' => 'ModVersion'
 	);
-
 
 	public static $create_table_options = array(
 		'MySQLDatabase' => 'ENGINE=MyISAM'
