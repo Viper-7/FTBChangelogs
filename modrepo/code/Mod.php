@@ -20,6 +20,10 @@ class Mod extends DataObject {
 	public function getName() {
 		return $this->ModId;
 	}
+
+	public function getTitle() {
+		return $this->ModId;
+	}
 	
 	public function canDelete($member = NULL) {
 		return $this->ModVersion()->Count() == 0;
