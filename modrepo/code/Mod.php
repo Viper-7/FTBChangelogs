@@ -15,6 +15,45 @@ class ChangelogAdmin extends ModelAdmin {
 	public $showImportForm = false;
 }
 
+class PackPage extends Page {}
+class PackPage_Controller extends Page_Controller {
+	private static $url_handlers = array(
+		'$ID//$OtherID' => 'view'
+	);
+
+	private static $allowed_actions = array('view');
+
+	private $PackID;
+	private $PackVersionID;
+	
+	public function view(SS_HTTPRequest $request) {
+		$this->PackID = $request->param('ID');
+		$this->PackVersionID = $request->param('OtherID');
+
+		return $this->render();
+	}
+
+	public function getPacks() {
+		$packs = array();
+		foreach(DataObject::get('PackVersion', 'EditedChangelog IS NOT NULL') as $ver) {
+			if(!isset($packs[$ver->PackID]))
+				$packs[$ver->PackID] = $ver->PackID;
+		}
+		return DataObject::get('Pack', 'ID IN (' . implode(',', $packs) . ')');
+	}
+
+	public function getPackVersions() {
+		if($this->PackID) {
+			return DataObject::get_by_id('Pack', $this->PackID)->PackVersion('EditedChangelog IS NOT NULL');
+		}
+	}
+
+	public function getPackVersion() {
+		if($this->PackVersionID)
+			return DataObject::get_by_id('PackVersion', $this->PackVersionID);
+	}
+}
+
 class Pack extends DataObject {
 	public static $db = array(
 		'Name' => 'Varchar(255)',
@@ -112,20 +151,23 @@ class PackVersion extends DataObject {
 	public static $db = array(
 		'Version' => 'Varchar(255)',
 		'Changelog' => 'Text',
-		'ModList' => 'Text',
 		'Populated' => 'Boolean',
+		'EditedChangelog' => 'Text',
 	);
 	
 	public static $has_one = array(
 		'Pack' => 'Pack',
 		'Minetweaker' => 'File',
 	);
+
+	public static $old_versions = array();
 	
 	public static $many_many = array(
 		'ModVersion' => 'ModVersion'
 	);
 	
 	public static $summary_fields = array(
+		'Pack.Name' => 'Name',
 		'Version' => 'Version'
 	);
 
@@ -157,6 +199,7 @@ class PackVersion extends DataObject {
 			$newmods[] = $mod->ModID;
 			if(isset($versions[$mod->ModID]) && $versions[$mod->ModID] != $mod->Version) {
 				$versionchange[] = $mod->ModID;
+				self::$old_versions[$mod->ModID] = $versions[$mod->ModID];
 			}
 		}
 
@@ -208,29 +251,27 @@ class PackVersion extends DataObject {
 		if(!$this->Populated) {
 			if($prev) {
 				foreach($this->ModVersion() as $mod) {
-					if(trim($mod->Changelog) == '') {
-						$old = $prev->ModVersion('ModID=' . intval($mod->ModID));
-						if($old->Count()) {
-							$old = $old->First();
-							if($old->ID == $mod->ID) continue;
+					$old = $prev->ModVersion('ModID=' . intval($mod->ModID));
+					if($old->Count()) {
+						$old = $old->First();
+						if($old->ID == $mod->ID) continue;
 
-							$changes = ModVersion::get_changes($old, $mod);
-							$changelog = '';
+						$changes = ModVersion::get_changes($old, $mod);
+						$changelog = '';
 
-							foreach($changes['Added'] as $item) {
-								$changelog .= "\r\nAdded {$item->Name}";
-							}
+						foreach($changes['Added'] as $item) {
+							$changelog .= "\r\nAdded {$item->Name}";
+						}
 
-							foreach($changes['Removed'] as $item) {
-								$changelog .= "\r\nRemoved {$item->Name}";
-							}
+						foreach($changes['Removed'] as $item) {
+							$changelog .= "\r\nRemoved {$item->Name}";
+						}
 				
-							if($changelog) {
-								$mod->Changelog = trim($changelog);
-								$mod->write();
+						if($changelog) {
+							$mod->Changelog = trim($changelog);
+							$mod->write();
 
-								$this->Populated = true;
-							}
+							$this->Populated = true;
 						}
 					}
 				}
@@ -246,7 +287,8 @@ class PackVersion extends DataObject {
 			}
 
                         foreach($changes['Updated'] as $mod) {
-                                $changelog .= "\r\nUpdated {$mod->Name} to {$mod->Version}";
+				$oldVersion = PackVersion::$old_versions[$mod->ModID];
+                                $changelog .= "\r\nUpdated {$mod->Name} from {$oldVersion} to {$mod->Version}";
 
                                 if($mod->Changelog) {
                                         foreach(explode("\n", $mod->Changelog) as $line) {
@@ -316,12 +358,17 @@ class PackVersion extends DataObject {
 		
 			if($this->Changelog) {
 				$changelog = $fields->fieldByName('Root.Main.Changelog');
-				$changelog->setRows(20);
+				$changelog->setRows(12);
 				$changelog->setTitle('Generated<br>Changelog');
 			} else {
 				$fields->removeByName('Changelog');
-				$fields->removeByName('ModList');
 			}
+
+			$edited = $fields->fieldByName('Root.Main.EditedChangelog');
+			$edited->setRows(12);
+			$edited->setTitle('Changelog');
+			$fields->removeByName('EditedChangelog');
+			$fields->addFieldToTab('Root.Main', $edited, 'Changelog');
 
 			$minetweaker = $fields->fieldByName('Root.Main.Minetweaker');
 			$fields->removeByName('Minetweaker');
@@ -332,6 +379,10 @@ class PackVersion extends DataObject {
 
 			$fields->fieldByName('Root.Main')->setTitle('Pack Version');
 			$fields->fieldByName('Root.ModVersion')->setTitle('Mods');
+			$config = $fields->fieldByName('Root.ModVersion.ModVersion')->getConfig();
+			$config->removeComponentsByType('GridFieldAddNewButton');
+			$config->removeComponentsByType('GridFieldAddExistingAutocompleter');
+			$config->removeComponentsByType('GridFieldDeleteAction');
 
 			$changes = $this->getChanges();
 
@@ -396,6 +447,8 @@ class ModVersion extends DataObject {
 		'Changelog' => 'Text',
 	);
 	
+	public $OldVersion = '';
+
 	public static $has_one = array(
 		'Mod' => 'Mod',
 	);
@@ -417,6 +470,10 @@ class ModVersion extends DataObject {
 		'Version' => 'Version',
 		'Filename' => 'Filename',
 	);
+
+	public function canDelete($member = NULL) {
+		return false;
+	}
 
         public static function get_changes($oldVersion, $newVersion) {
                 if(!$oldVersion && $newVersion) return array('Updated' => array(), 'Added' => $newVersion->Item(), 'Removed' => array());
