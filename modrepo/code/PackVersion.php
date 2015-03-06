@@ -56,14 +56,14 @@ class PackVersion extends DataObject {
 		}
 
 		if(!empty($_POST['Minetweaker']['Files'][0])) {
-				$id = $_POST['Minetweaker']['Files'][0];
+			$id = $_POST['Minetweaker']['Files'][0];
 
-				$file = DataObject::get_by_id('File', $id);
-				$content = file_get_contents($path = $file->getFullPath());
-				$this->MinetweakerID = null;
-				$file->delete();
-				$this->doMinetweaker($content);
-	   } 
+			$file = DataObject::get_by_id('File', $id);
+			$content = file_get_contents($path = $file->getFullPath());
+			$this->MinetweakerID = null;
+			$file->delete();
+			$this->doMinetweaker($content);
+		} 
 
 		$prev = $this->PreviousVersion();
 
@@ -98,10 +98,10 @@ class PackVersion extends DataObject {
 			}
 		}
 
-		
+
 		// Parse mod list.txt into pack changelog
-	    $changes = PackVersion::getChanges($prev, $this);
-	    $changelog = '';
+		$changes = PackVersion::getChanges($prev, $this);
+		$changelog = '';
 
 		foreach($changes['Added'] as $mod) {
 			$changelog .= "Added {$mod->Name} {$mod->Version}\r\n";
@@ -110,12 +110,12 @@ class PackVersion extends DataObject {
 		foreach($changes['Updated'] as $mod) {
 			$oldVersion = PackVersion::$old_versions[$mod->ModID];
 			
-            $changelog .= "Updated {$mod->Name} from {$oldVersion} to {$mod->Version}\r\n";
+			$changelog .= "Updated {$mod->Name} from {$oldVersion} to {$mod->Version}\r\n";
 
 			if($mod->Changelog) {
-					foreach(explode("\n", $mod->Changelog) as $line) {
-							$changelog .= "    " . trim($line) . "\r\n";
-					}
+				foreach(explode("\n", $mod->Changelog) as $line) {
+					$changelog .= "    " . trim($line) . "\r\n";
+				}
 			}
 		}
 
